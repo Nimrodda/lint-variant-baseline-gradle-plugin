@@ -84,12 +84,13 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
     }
 
     private fun createGenerateLintBaselineTasks(project: Project, variantName: String, lintOptions: LintOptions) {
-        project.tasks.create("generateLintBaseline$variantName", Copy::class.java) { copy ->
+        val variantNameCaps = variantName.capitalize()
+        project.tasks.create("generateLintBaseline$variantNameCaps", Copy::class.java) { copy ->
             with(copy) {
                 description = "Generates lint-baseline.xml file per variant and places it under" +
                     "variant directory. This task overwrites the existing baseline file."
                 group = "Pre Lint"
-                dependsOn(DELETE_BASELINE_TASK_NAME, "lint$variantName")
+                dependsOn(DELETE_BASELINE_TASK_NAME, "lint$variantNameCaps")
                 from(lintOptions.baselineFile)
                 into(getVariantDir(project, variantName))
             }
@@ -98,7 +99,6 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
 
     private fun createDeleteLintBaselineTask(project: Project, lintOptions: LintOptions) {
         if (!deleteBaselineTaskCreated) {
-            println("Creating delete task")
             project.tasks.create(DELETE_BASELINE_TASK_NAME, Delete::class.java) { delete ->
                 with(delete) {
                     description =
