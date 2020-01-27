@@ -24,6 +24,8 @@ dependencies {
 gradlePlugin {
     plugins {
         androidLintVariantBaseline {
+            displayName = "Android Lint Variant Baseline"
+            description = "Variant specific Lint baseline file support for Android projects"
             id = 'com.nimroddayan.lint-variant-baseline'
             implementationClass = 'com.nimroddayan.androidlintvariantbaseline.AndroidLintVariantBaselinePlugin'
         }
