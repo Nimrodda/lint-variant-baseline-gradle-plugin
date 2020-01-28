@@ -8,12 +8,119 @@ The plugin stores each `lint-baseline.xml` file under a corresponding variant fo
 variant, the plugin registers a dependency on a task that copies the baseline file to the location you specify in 
 lintOptions block.
 
-Simply execute your lint task as usual, for example: `./gradlew lintPaidRelease`.
+## Usage
+
+### 1. Gradle configuration
+
+```Gradle
+plugins {
+    id "com.nimroddayan.lint-variant-baseline" version "0.1.0"
+}
+
+// Apply the plugin and configure Android Gradle plugin Lint options per each module
+subprojects {
+    apply plugin: 'com.nimroddayan.lint-variant-baseline'
+
+    def configureKotlin = {
+        android {
+            lintOptions {
+                baseline file("lint-baseline.xml") // Relative to the module root
+                checkDependencies false
+                checkReleaseBuilds true
+                abortOnError true
+        
+                // Custom Lint configuration file for ignoring specific lint checks
+                lintConfig file("$rootDir/lint-config.xml")
+            }
+        }
+        
+        plugins.withType(com.android.build.gradle.AppPlugin, configureKotlin)
+        plugins.withType(com.android.build.gradle.LibraryPlugin, configureKotlin)
+    }
+}
+
+``` 
+
+### 2. Generating the baseline files per module variant
+
+Let's assume that we have one product flavor defined in the app and some feature modules like so:
+
+```
+android {
+    flavorDimensions "type"
+    productFlavors {
+        free {
+            dimension "type"
+        }
+        paid {
+            dimension "type"
+        }
+    }
+}
+```
+
+Now that you have the Gradle config in place, you can run the tasks to generate baseline files per each module
+ in the project per variant:
+
+```
+./gradlew generateLintBaselinePaidRelease -Dlint.baselines.continue=true \
+generateLintBaselineFreeRelease -Dlint.baselines.continue=true \
+generateLintBaselinePaidDebug -Dlint.baselines.continue=true \
+generateLintBaselineFreeDebug -Dlint.baselines.continue=true
+```
+
+For library modules which don't have product flavors, you can run generate baseline files like so:
+
+```
+./gradlew generateLintBaselineRelease -Dlint.baselines.continue=true \
+generateLintBaselineRelease -Dlint.baselines.continue=true \
+generateLintBaselineDebug -Dlint.baselines.continue=true \
+generateLintBaselineDebug -Dlint.baselines.continue=true
+```
+
+The above will execute the tasks for all modules which apply the Android Gradle app or library plugin.
+ 
+>Note that `-Dlint.baselines.continue=true` is necessary so that lint will continue without failing the build.
+
+When the tasks are finished, you will see baseline files in the variant source folder. For example:
+
+```
+/
+/app/paidRelease/lint-baseline.xml
+/app/paidDebug/lint-baseline.xml
+/app/freeRelease/lint-baseline.xml
+/app/freeDebug/lint-baseline.xml
+/feature/paidRelease/lint-baseline.xml
+/feature/paidDebug/lint-baseline.xml
+/feature/freeRelease/lint-baseline.xml
+/feature/freeDebug/lint-baseline.xml
+```
+
+>Note that you will also see baseline files in modules' root. **You
+should ignore these files in your .gitignore. See the section below about it.**
+
+### 3. Version control
+
+It is recommended to git ignore baseline files at the module root and exclude the variant specific ones:
+
+```
+# Ignore baseline file in module root, but keep ones in variant specific folders
+lint-baseline.xml
+!**/*[Rr]elease/lint-baseline.xml
+!**/*[Dd]ebug/lint-baseline.xml
+
+``` 
+
+### 4. Running lint
+
+After you generated the baseline files, run lint as you'd normally would. The plugin adds a task which is run prior to the
+lint task to copy the variant specific baseline file to the module root.
+
+For example: `./gradlew lintPaidRelease`.
 
 ## Available tasks
 
-Before running lint, you want to generate the baseline file per variant. The plugin adds the following tasks to help
-with that:
+The plugin exposes the following tasks:
 
 ### generateLintBaseline{VariantName} -Dlint.baselines.continue=true
 
@@ -26,9 +133,12 @@ Example: `./gradlew generateLintBaselinePaidRelease -Dlint.baselines.continue=tr
 
 ### deleteLintBaseline
 
-Deletes the baseline file specified in lintOptions, e.g.: the one used by Android Gradle plugin, not the variant
-specific one. This task can be used when you starting with this plugin. It is recommended that you first generate
+Deletes the baseline file specified in lintOptions, e.g.: the one in the module's root, not the variant
+specific one. This task can be used when you're setting up this plugin. It is recommended that you first generate
 the variant specific baseline files and then use this task to clean up the leftovers in the module root folder.
+
+Note that after each time you run lint, a new baseline file will appear in the module root and therefore it is
+recommended to simply ignore these files in .gitignore. See section "Version control" above.
 
 Example: `./gradlew deleteLintBaseline`
 
@@ -37,25 +147,6 @@ Example: `./gradlew deleteLintBaseline`
 This task is run just before lint<VariantName> as a dependency. It is not meant to be run by the user.
 
 Example: `./gradlew copyLintBaselinePaidRelease`
-
-## Download
-
-```Gradle
-plugins {
-    id "com.nimroddayan.lint-variant-baseline" version "0.1.0"
-}
-``` 
-
-## Config
-
-It is recommended to git ignore baseline files at the module root like so:
-
-```
-# We ignore baseline files in module root
-# each module has baseline stored per variant which is the one that is added to git
-*/lint-baseline.xml
-
-``` 
 
 ## Contributing
 
