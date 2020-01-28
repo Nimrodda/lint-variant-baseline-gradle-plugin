@@ -56,8 +56,7 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
         variantName: String,
         lintOptions: LintOptions
     ) {
-        val variantNameCaps = variantName.capitalize()
-        createCopyBaselineTasks(project, variantNameCaps, lintOptions)
+        createCopyBaselineTasks(project, variantName, lintOptions)
         createDeleteLintBaselineTask(project, lintOptions)
         createGenerateLintBaselineTasks(project, variantName, lintOptions)
     }
@@ -68,8 +67,10 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
         lintOptions: LintOptions
     ) {
         val variantDir = getVariantDir(project, variantName)
+        val variantNameCaps = variantName.capitalize()
+        val copyBaselineTaskName = "copyLintBaseline$variantNameCaps"
         val copyLintBaselineTask =
-            project.tasks.create("copyLintBaseline$variantName", Copy::class.java) { copy ->
+            project.tasks.create(copyBaselineTaskName, Copy::class.java) { copy ->
                 with(copy) {
                     description = "Copies baseline xml to module root for $variantName"
                     group = "Pre Lint"
@@ -79,8 +80,8 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
                     includeEmptyDirs = false
                 }
             }
-        project.tasks.first { it.name == "lint$variantName" }
-            .dependsOn(copyLintBaselineTask)
+        val lintTask = project.tasks.first { it.name == "lint$variantNameCaps" }
+        lintTask.dependsOn(copyLintBaselineTask)
     }
 
     private fun createGenerateLintBaselineTasks(project: Project, variantName: String, lintOptions: LintOptions) {
