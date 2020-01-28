@@ -12,9 +12,13 @@ lintOptions block.
 
 ### 1. Gradle configuration
 
+Configure the plugin as follow. **Note the baseline file configuration in android.lintOptions closure!**
+It is recommended to set it to the module's build dir since the variant specific one will be copied just
+before lint starts. 
+ 
 ```Gradle
 plugins {
-    id "com.nimroddayan.lint-variant-baseline" version "0.1.1"
+    id "com.nimroddayan.lint-variant-baseline" version "0.1.2"
 }
 
 // Apply the plugin and configure Android Gradle plugin Lint options per each module
@@ -24,7 +28,9 @@ subprojects {
     def configureKotlin = {
         android {
             lintOptions {
-                baseline file("lint-baseline.xml") // Relative to the module root
+                // It is recommended to set the baseline file path to build dir
+                // because the variant specific one will be copied from variant source dir just before lint starts
+                baseline file("$buildDir/lint-baseline.xml")
                 checkDependencies false
                 checkReleaseBuilds true
                 abortOnError true
@@ -96,22 +102,9 @@ When the tasks are finished, you will see baseline files in the variant source f
 /feature/src/freeDebug/lint-baseline.xml
 ```
 
->Note that you will also see baseline files in modules' root. **You
-should ignore these files in your .gitignore. See the section below about it.**
+>You should add these baseline files to source control.
 
-### 3. Version control
-
-It is recommended to git ignore baseline files at the module root and exclude the variant specific ones:
-
-```
-# Ignore baseline file in module root, but keep ones in variant specific folders
-lint-baseline.xml
-!**/*[Rr]elease/lint-baseline.xml
-!**/*[Dd]ebug/lint-baseline.xml
-
-``` 
-
-### 4. Running lint
+### 3. Running lint
 
 After you generated the baseline files, run lint as you'd normally would. The plugin adds a task which is run prior to the
 lint task to copy the variant specific baseline file to the module root.
