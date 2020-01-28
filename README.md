@@ -107,7 +107,7 @@ When the tasks are finished, you will see baseline files in the variant source f
 ### 3. Running lint
 
 After you generated the baseline files, run lint as you'd normally would. The plugin adds a task which is run prior to the
-lint task to copy the variant specific baseline file to the module root.
+lint task to copy the variant specific baseline file to the path specified in lintOptions.baseline.
 
 For example: `./gradlew lintPaidRelease`.
 
@@ -126,18 +126,16 @@ Example: `./gradlew generateLintBaselinePaidRelease -Dlint.baselines.continue=tr
 
 ### deleteLintBaseline
 
-Deletes the baseline file specified in lintOptions, e.g.: the one in the module's root, not the variant
-specific one. This task can be used when you're setting up this plugin. It is recommended that you first generate
-the variant specific baseline files and then use this task to clean up the leftovers in the module root folder.
-
-Note that after each time you run lint, a new baseline file will appear in the module root and therefore it is
-recommended to simply ignore these files in .gitignore. See section "Version control" above.
+Deletes the baseline file specified in lintOptions if it exists. 
+This task can be used when you're setting up this plugin to delete old baseline files.
 
 Example: `./gradlew deleteLintBaseline`
 
 ### copyLintBaseline{VariantName}
 
-This task is run just before lint<VariantName> as a dependency. It is not meant to be run by the user.
+This task is run just before lint{VariantName} as a dependency. It copies the variant specific baseline file
+from variant source dir to the destination specified in lintOptions.baseline. 
+This task is used internally and it is not meant to be run by the user.
 
 Example: `./gradlew copyLintBaselinePaidRelease`
 
