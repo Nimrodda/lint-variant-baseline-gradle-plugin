@@ -86,14 +86,14 @@ When the tasks are finished, you will see baseline files in the variant source f
 
 ```
 /
-/app/paidRelease/lint-baseline.xml
-/app/paidDebug/lint-baseline.xml
-/app/freeRelease/lint-baseline.xml
-/app/freeDebug/lint-baseline.xml
-/feature/paidRelease/lint-baseline.xml
-/feature/paidDebug/lint-baseline.xml
-/feature/freeRelease/lint-baseline.xml
-/feature/freeDebug/lint-baseline.xml
+/app/src/paidRelease/lint-baseline.xml
+/app/src/paidDebug/lint-baseline.xml
+/app/src/freeRelease/lint-baseline.xml
+/app/src/freeDebug/lint-baseline.xml
+/feature/src/paidRelease/lint-baseline.xml
+/feature/src/paidDebug/lint-baseline.xml
+/feature/src/freeRelease/lint-baseline.xml
+/feature/src/freeDebug/lint-baseline.xml
 ```
 
 >Note that you will also see baseline files in modules' root. **You
