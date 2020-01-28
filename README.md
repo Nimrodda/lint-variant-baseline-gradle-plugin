@@ -14,7 +14,7 @@ lintOptions block.
 
 ```Gradle
 plugins {
-    id "com.nimroddayan.lint-variant-baseline" version "0.1.0"
+    id "com.nimroddayan.lint-variant-baseline" version "0.1.1"
 }
 
 // Apply the plugin and configure Android Gradle plugin Lint options per each module
