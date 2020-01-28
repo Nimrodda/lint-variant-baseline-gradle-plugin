@@ -40,7 +40,7 @@ class AndroidLintVariantBaselinePluginFunctionalTest {
         projectDir.resolve("build.gradle").writeText("""
             plugins {
                 id 'com.android.library' version '3.5.3'            
-                id 'com.nimroddayan.lint-variant-baseline' version '0.1.0'
+                id 'com.nimroddayan.lint-variant-baseline' version '0.1.2'
             }
             android {
                 compileSdkVersion 29
@@ -82,7 +82,7 @@ class AndroidLintVariantBaselinePluginFunctionalTest {
         projectDir.resolve("build.gradle").writeText("""
             plugins {
                 id 'com.android.library' version '3.5.3'            
-                id 'com.nimroddayan.lint-variant-baseline' version '0.1.0'
+                id 'com.nimroddayan.lint-variant-baseline' version '0.1.2'
             }
             repositories {
                 google()
@@ -139,7 +139,7 @@ class AndroidLintVariantBaselinePluginFunctionalTest {
         projectDir.resolve("build.gradle").writeText("""
             plugins {
                 id 'com.android.library' version '3.5.3'            
-                id 'com.nimroddayan.lint-variant-baseline' version '0.1.0'
+                id 'com.nimroddayan.lint-variant-baseline' version '0.1.2'
             }
             android {
                 compileSdkVersion 29
