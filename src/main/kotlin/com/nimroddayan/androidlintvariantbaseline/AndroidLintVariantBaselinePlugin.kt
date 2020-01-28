@@ -79,8 +79,8 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
                     includeEmptyDirs = false
                 }
             }
-        project.tasks.filter { it.name.startsWith("lint$variantName") }
-            .forEach { it.dependsOn(copyLintBaselineTask) }
+        project.tasks.first { it.name == "lint$variantName" }
+            .dependsOn(copyLintBaselineTask)
     }
 
     private fun createGenerateLintBaselineTasks(project: Project, variantName: String, lintOptions: LintOptions) {
