@@ -5,6 +5,8 @@ plugins {
     id "org.jmailen.kotlinter" version "2.1.2"
     id "com.gradle.plugin-publish" version "0.10.1"
     id "org.jetbrains.gradle.plugin.idea-ext" version "0.7"
+    id "maven-publish"
+    id "com.jfrog.bintray" version "1.8.4"
 }
 
 repositories {
@@ -69,3 +71,34 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
+publishing {
+    repositories {
+        maven {
+            url project.buildDir
+        }
+    }
+}
+
+// Publishing to bintray is done via task: bintrayUpload
+bintray {
+    user = bintray_user
+    key = bintray_api_key
+    publications = ['androidLintVariantBaselinePluginMarkerMaven', 'pluginMaven']
+    publish = true
+    pkg {
+        repo = 'release'
+        name = project.name
+        userOrg = 'nimroddayan'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/Nimrodda/lint-variant-baseline-gradle-plugin'
+        version {
+            name = project.version
+            gpg {
+                sign = true
+            }
+        }
+    }
+}
+
+bintrayUpload.dependsOn publish
