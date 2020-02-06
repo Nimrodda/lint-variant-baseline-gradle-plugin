@@ -33,9 +33,8 @@ private const val DELETE_BASELINE_TASK_NAME = "deleteLintBaseline"
  * Gradle plugin that adds support for lint-baseline.xml file per Android variant
  * in app and library modules.
  */
+@Suppress("unused")
 class AndroidLintVariantBaselinePlugin : Plugin<Project> {
-    private var deleteBaselineTaskCreated = false
-
     override fun apply(project: Project) {
         project.plugins.withType(AppPlugin::class.java) {
             val extension = project.extensions.getByName("android") as BaseAppModuleExtension
@@ -56,35 +55,34 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
         variantName: String,
         lintOptions: LintOptions
     ) {
-        createCopyBaselineTasks(project, variantName, lintOptions)
-        createDeleteLintBaselineTask(project, lintOptions)
-        createGenerateLintBaselineTasks(project, variantName, lintOptions)
+        registerCopyBaselineTasks(project, variantName, lintOptions)
+        registerDeleteLintBaselineTask(project, lintOptions)
+        registerGenerateLintBaselineTasks(project, variantName, lintOptions)
     }
 
-    private fun createCopyBaselineTasks(
+    private fun registerCopyBaselineTasks(
         project: Project,
         variantName: String,
         lintOptions: LintOptions
     ) {
         val variantNameCaps = variantName.capitalize()
         val copyBaselineTaskName = "copyLintBaseline$variantNameCaps"
-        val copyLintBaselineTask =
-            project.tasks.create(copyBaselineTaskName, Copy::class.java) { copy ->
-                with(copy) {
-                    description = "Copies baseline xml to module root for $variantName"
-                    group = "Pre Lint"
-                    from(getVariantDir(project, variantName))
-                    into(lintOptions.baselineFile.parentFile)
-                    includeEmptyDirs = false
-                }
+        project.tasks.register(copyBaselineTaskName, Copy::class.java) { copy ->
+            with(copy) {
+                description = "Copies baseline xml to module root for $variantName"
+                group = "Pre Lint"
+                from(getVariantDir(project, variantName))
+                into(lintOptions.baselineFile.parentFile)
+                includeEmptyDirs = false
             }
+        }
         val lintTask = project.tasks.first { it.name == "lint$variantNameCaps" }
-        lintTask.dependsOn(copyLintBaselineTask)
+        lintTask.dependsOn(copyBaselineTaskName)
     }
 
-    private fun createGenerateLintBaselineTasks(project: Project, variantName: String, lintOptions: LintOptions) {
+    private fun registerGenerateLintBaselineTasks(project: Project, variantName: String, lintOptions: LintOptions) {
         val variantNameCaps = variantName.capitalize()
-        project.tasks.create("generateLintBaseline$variantNameCaps", Copy::class.java) { copy ->
+        project.tasks.register("generateLintBaseline$variantNameCaps", Copy::class.java) { copy ->
             with(copy) {
                 description = "Generates lint-baseline.xml file per variant and places it under" +
                     "variant directory. This task overwrites the existing baseline file."
@@ -96,17 +94,14 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
         }
     }
 
-    private fun createDeleteLintBaselineTask(project: Project, lintOptions: LintOptions) {
-        if (!deleteBaselineTaskCreated) {
-            project.tasks.create(DELETE_BASELINE_TASK_NAME, Delete::class.java) { delete ->
-                with(delete) {
-                    description =
-                        "Deletes the baseline specified in lintOptions. Useful before generating baseline file."
-                    group = "Pre Lint"
-                    delete(lintOptions.baselineFile)
-                }
+    private fun registerDeleteLintBaselineTask(project: Project, lintOptions: LintOptions) {
+        project.tasks.register(DELETE_BASELINE_TASK_NAME, Delete::class.java) { delete ->
+            with(delete) {
+                description =
+                    "Deletes the baseline specified in lintOptions. Useful before generating baseline file."
+                group = "Pre Lint"
+                delete(lintOptions.baselineFile)
             }
-            deleteBaselineTaskCreated = true
         }
     }
 
