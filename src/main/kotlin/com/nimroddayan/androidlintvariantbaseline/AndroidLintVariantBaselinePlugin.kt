@@ -41,13 +41,16 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
             extension.applicationVariants.all { variant ->
                 createPluginTasks(project, variant.name, extension.lintOptions)
             }
+            registerDeleteLintBaselineTask(project, extension.lintOptions)
         }
         project.plugins.withType(LibraryPlugin::class.java) {
             val extension = project.extensions.getByName("android") as LibraryExtension
             extension.libraryVariants.all { variant ->
                 createPluginTasks(project, variant.name, extension.lintOptions)
             }
+            registerDeleteLintBaselineTask(project, extension.lintOptions)
         }
+        System.setProperty("lint.baselines.continue", "true")
     }
 
     private fun createPluginTasks(
@@ -55,12 +58,12 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
         variantName: String,
         lintOptions: LintOptions
     ) {
-        registerCopyBaselineTasks(project, variantName, lintOptions)
-        registerDeleteLintBaselineTask(project, lintOptions)
-        registerGenerateLintBaselineTasks(project, variantName, lintOptions)
+        registerCopyBaselineTask(project, variantName, lintOptions)
+        registerGenerateLintBaselineTask(project, variantName, lintOptions)
+        registerDeleteVariantBaselineTask(project, variantName, lintOptions)
     }
 
-    private fun registerCopyBaselineTasks(
+    private fun registerCopyBaselineTask(
         project: Project,
         variantName: String,
         lintOptions: LintOptions
@@ -71,28 +74,41 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
             with(copy) {
                 description = "Copies baseline xml to module root for $variantName"
                 group = "Pre Lint"
-                from(getVariantDir(project, variantName))
+                from(getVariantBaselineFile(project, variantName, lintOptions.baselineFile))
                 into(lintOptions.baselineFile.parentFile)
                 includeEmptyDirs = false
             }
         }
         val lintTask = project.tasks.first { it.name == "lint$variantNameCaps" }
         lintTask.dependsOn(copyBaselineTaskName)
+        lintTask.mustRunAfter(getDeleteVariantBaselineTaskName(variantNameCaps))
     }
 
-    private fun registerGenerateLintBaselineTasks(project: Project, variantName: String, lintOptions: LintOptions) {
+    private fun registerGenerateLintBaselineTask(project: Project, variantName: String, lintOptions: LintOptions) {
         val variantNameCaps = variantName.capitalize()
         project.tasks.register("generateLintBaseline$variantNameCaps", Copy::class.java) { copy ->
             with(copy) {
                 description = "Generates lint-baseline.xml file per variant and places it under" +
                     "variant directory. This task overwrites the existing baseline file."
                 group = "Pre Lint"
-                dependsOn(DELETE_BASELINE_TASK_NAME, "lint$variantNameCaps")
                 from(lintOptions.baselineFile)
                 into(getVariantDir(project, variantName))
             }
         }
     }
+
+    private fun registerDeleteVariantBaselineTask(project: Project, variantName: String, lintOptions: LintOptions) {
+        val variantNameCaps = variantName.capitalize()
+        project.tasks.register(getDeleteVariantBaselineTaskName(variantNameCaps), Delete::class.java) { delete ->
+            with(delete) {
+                description = "Deletes this variant baseline file"
+                group = "Pre Lint"
+                delete(getVariantBaselineFile(project, variantName, lintOptions.baselineFile))
+            }
+        }
+    }
+
+    private fun getDeleteVariantBaselineTaskName(variantNameCaps: String) = "delete${variantNameCaps}Baseline"
 
     private fun registerDeleteLintBaselineTask(project: Project, lintOptions: LintOptions) {
         project.tasks.register(DELETE_BASELINE_TASK_NAME, Delete::class.java) { delete ->
@@ -109,4 +125,10 @@ class AndroidLintVariantBaselinePlugin : Plugin<Project> {
         project: Project,
         variantName: String
     ): File = File(project.projectDir, "src/$variantName")
+
+    private fun getVariantBaselineFile(
+        project: Project,
+        variantName: String,
+        baselineFile: File
+    ): File = File(getVariantDir(project, variantName), baselineFile.name)
 }
